@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Make 5! | Miss Riham Timsah</title>
+<style>
+*{box-sizing:border-box} body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#fff4c7,#dff7ff);min-height:100vh;display:flex;align-items:center;justify-content:center;color:#24324a}
+.card{width:min(94vw,720px);background:white;border-radius:30px;padding:24px;box-shadow:0 15px 45px #0002;text-align:center;position:relative;overflow:hidden}
+h1{margin:5px 0;color:#ff7a45;font-size:clamp(28px,7vw,48px)}
+.sub{font-size:20px;font-weight:bold;color:#6c63ff}.stars{font-size:28px;letter-spacing:5px;margin:10px}
+.progress{height:14px;background:#eee;border-radius:20px;overflow:hidden;margin:15px}.bar{height:100%;width:0;background:#57c785;transition:.4s}
+.question{font-size:clamp(34px,10vw,64px);font-weight:900;margin:25px 0}
+.answers{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.answer{border:0;border-radius:22px;padding:18px;font-size:28px;font-weight:900;background:#f1f4ff;cursor:pointer;transition:.15s;box-shadow:0 5px 0 #ccd2e8}
+.answer:hover{transform:translateY(-3px)} .answer:active{transform:translateY(3px);box-shadow:none}
+.correct{background:#bdf5ca!important}.wrong{background:#ffd0d0!important;animation:shake .3s}
+.feedback{min-height:45px;font-size:23px;font-weight:bold;margin:15px}
+.hidden{display:none}.start input{font-size:20px;padding:14px;border-radius:15px;border:2px solid #ddd;width:85%;text-align:center}.btn{border:0;border-radius:18px;padding:15px 28px;font-size:22px;font-weight:900;background:#ff9f43;color:white;cursor:pointer;box-shadow:0 5px 0 #d87820}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}@keyframes pop{0%{transform:scale(.5)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+.pop{animation:pop .45s}.confetti{position:absolute;inset:0;pointer-events:none;font-size:28px}
+.confetti span{position:absolute;animation:fall 1.4s linear forwards}@keyframes fall{from{transform:translateY(-50px) rotate(0);opacity:1}to{transform:translateY(500px) rotate(500deg);opacity:0}}
+</style>
+</head>
+<body>
+<div class="card">
+  <div id="start" class="start">
+    <div style="font-size:70px">🍎⭐</div>
+    <h1>Make 5!</h1><div class="sub">Miss Riham Timsah</div>
+    <p style="font-size:22px">Let's make 5! Choose the correct number.</p>
+    <input id="name" placeholder="Write your name">
+    <br><br><button class="btn" onclick="startGame()">Start Game 🚀</button>
+  </div>
+
+  <div id="game" class="hidden">
+    <div class="sub">Make 5! 🍎</div>
+    <div id="player" style="font-weight:bold;margin-top:5px"></div>
+    <div class="stars" id="stars">☆ ☆ ☆ ☆ ☆</div>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div id="count"></div>
+    <div class="question" id="question"></div>
+    <div class="answers" id="answers"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div id="end" class="hidden">
+    <div style="font-size:85px" class="pop">🏆</div>
+    <h1>Awesome!</h1>
+    <div id="result" style="font-size:30px;font-weight:900"></div>
+    <p style="font-size:23px">You made 5! 🎉</p>
+    <button class="btn" onclick="location.reload()">Play Again 🔄</button>
+  </div>
+  <div class="confetti" id="confetti"></div>
+</div>
+
+<script>
+const qs=[
+["0",["1","2","3","5"]],["1",["2","3","4","5"]],["2",["1","2","3","4"]],
+["3",["1","2","3","4"]],["4",["0","1","2","3"]],["0",["3","4","5","2"]],
+["1",["1","2","3","4"]],["2",["2","3","4","5"]],["3",["1","2","2","4"]],["4",["0","1","2","3"]]
+];
+let i=0, score=0, locked=false, name="";
+function beep(ok){
+ const C=window.AudioContext||window.webkitAudioContext; if(!C)return;
+ const a=new C(),o=a.createOscillator(),g=a.createGain(); o.connect(g);g.connect(a.destination);
+ o.frequency.value=ok?660:180; g.gain.setValueAtTime(.001,a.currentTime);g.gain.exponentialRampToValueAtTime(.18,a.currentTime+.03);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+.25);o.start();o.stop(a.currentTime+.26);
+}
+function speak(t){if("speechSynthesis"in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang="en-US";u.rate=.9;speechSynthesis.speak(u)}}
+function startGame(){name=document.getElementById("name").value.trim()||"Super Star";document.getElementById("start").classList.add("hidden");document.getElementById("game").classList.remove("hidden");document.getElementById("player").textContent="⭐ "+name;show();}
+function show(){
+ locked=false;let missing=5-Number(qs[i][0]);document.getElementById("question").textContent=qs[i][0]+" + ? = 5";
+ document.getElementById("count").textContent=`Question ${i+1} of ${qs.length}`;
+ document.getElementById("bar").style.width=(i/qs.length*100)+"%";document.getElementById("feedback").textContent="";
+ let arr=[...new Set(qs[i][1])];arr.sort(()=>Math.random()-.5);
+ document.getElementById("answers").innerHTML="";
+ arr.forEach(x=>{let b=document.createElement("button");b.className="answer";b.textContent=x;b.onclick=()=>check(b,Number(x)===missing);document.getElementById("answers").appendChild(b)});
+ speak(qs[i][0]+" plus what makes five?");
+}
+function check(btn,ok){if(locked)return;if(ok){locked=true;score++;btn.classList.add("correct","pop");beep(true);document.getElementById("feedback").textContent="🎉 Great job!";document.getElementById("stars").textContent="⭐".repeat(Math.min(score,5))+" ☆".repeat(Math.max(0,5-Math.min(score,5)));confetti();setTimeout(()=>{i++;if(i<qs.length)show();else finish()},900)}else{btn.classList.add("wrong");beep(false);document.getElementById("feedback").textContent="💡 Try again! You can do it!";setTimeout(()=>btn.classList.remove("wrong"),350)}}
+function confetti(){let c=document.getElementById("confetti");for(let k=0;k<18;k++){let s=document.createElement("span");s.textContent=["⭐","🎉","🍎","✨"][k%4];s.style.left=Math.random()*95+"%";s.style.animationDelay=Math.random()*.2+"s";c.appendChild(s);setTimeout(()=>s.remove(),1600)}}
+function finish(){document.getElementById("game").classList.add("hidden");document.getElementById("end").classList.remove("hidden");document.getElementById("result").textContent=`${name}, your score is ${score} / ${qs.length} ⭐` ;confetti();beep(true)}
+</script>
+</body>
+</html>
